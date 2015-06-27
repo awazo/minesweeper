@@ -8,7 +8,7 @@
 <title>minesweeper</title>
 </head>
 <body>
-<div id="message" onmousedown="longclicktest(this)" onmouseup="clearTimeout(longclicktimerid)">
+<div id="message" onclick="c(this)" onmousedown="longclicktest(this)" onmouseup="clearTimeout(longclicktimerid)">
 under constructions...
 </div>
 
@@ -19,6 +19,7 @@ under constructions...
 
 <script>
 //<![CDATA[
+function c(obj) { obj.innerHTML="clicked"; }
 var longclicktimerid;
 function longclicktest(obj) {
   longclicktimerid = setTimeout(function() {
@@ -27,6 +28,45 @@ function longclicktest(obj) {
 }
 //]]>
 </script>
+
+<svg id="tileNormal" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 18,18 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
+</svg>
+<svg id="tileFlag" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 18,18 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
+  <path d="M 3 2 q 3 4 5 2 q 3 -4 6 0 l 0 6 q -3 -4 -5 0 q -3 2 -6 -4"
+    style="fill:red;stroke:red;stroke-width:1;" />
+  <rect x="3" y="2" width="2" height="13"
+    style="fill:rgb(153,102,0);stroke:none;" />
+</svg>
+<svg id="tileOpen" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 0,0 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
+</svg>
+<!--
+  <text x="5" y="16"
+    style="fill:black;stroke:black;stroke-width:1;">1</text>
+-->
+<svg id="tileMine" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 0,0 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
+  <polyline points="5,5 9,9 5,13"
+    style="fill:none;stroke:red;stroke-width:2;" />
+  <polyline points="17,5 13,9 17,13"
+    style="fill:none;stroke:red;stroke-width:2;" />
+  <line x1="8" y1="15" x2="14" y2="15"
+    style="fill:none;stroke:red;stroke-wdith:2;" />
+</svg>
 
 </body>
 </html>
