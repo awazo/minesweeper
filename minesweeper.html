@@ -8,7 +8,9 @@
 <title>minesweeper</title>
 </head>
 <body>
-<div id="message">under constructions...</div>
+<div id="message" onmousedown="longclicktest(this)" onmouseup="clearTimeout(longclicktimerid)">
+under constructions...
+</div>
 
 <table id="gameboard">
 <tbody>
@@ -17,6 +19,12 @@
 
 <script>
 //<![CDATA[
+var longclicktimerid;
+function longclicktest(obj) {
+  longclicktimerid = setTimeout(function() {
+      obj.innerHTML = "hoge";
+    }, 1000);
+}
 //]]>
 </script>
 
