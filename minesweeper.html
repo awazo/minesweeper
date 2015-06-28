@@ -4,37 +4,75 @@
 <meta charset="UTF-8" />
 <style type="text/css">
 * { padding: 0px; margin: 0px; }
+dt, dd { display: inline; }
+dt:after { content: ":"; }
 </style>
 <title>minesweeper</title>
 </head>
 <body>
-<div id="message" onclick="c(this)" onmousedown="longclicktest(this)" onmouseup="clearTimeout(longclicktimerid)">
+<div id="message" onmousedown="lcstart(this)" onmouseup="lcend(this)">
 under constructions...
 </div>
 
-<table id="gameboard">
+<table id="gameBoard">
 <tbody>
 </tbody>
 </table>
 
 <script>
 //<![CDATA[
-function c(obj) { obj.innerHTML="clicked"; }
 var longclicktimerid;
 function longclicktest(obj) {
   longclicktimerid = setTimeout(function() {
       obj.innerHTML = "hoge";
     }, 1000);
 }
+var lcobj;
+function lcstart(obj) {
+  lcobj = new StatedTimeout();
+  lcobj.setTimeout(function() { obj.innerHTML = "long-clicked"; }, 1000);
+}
+function lcend(obj) {
+  if(lcobj.state === 1) { obj.innerHTML = "clicked"; lcobj.clearTimeout(); }
+}
 //]]>
 </script>
 
+<script>
+//<![CDATA[
+function StatedTimeout() {
+  this.state = 0;
+  // 0: none, 1: started, 2: canceled, 3: completed
+  this.stateName = ["none", "started", "canceled", "completed"];
+  this.timerId = null;
+  this.setTimeout = function(f, ms) {
+    if(this.state === 1) return;
+    this.state = 1;
+    var outerObj = this;
+    this.timerId = setTimeout(function() { outerObj.state = 3; f(); }, ms);
+  };
+  this.clearTimeout = function() {
+    if((this.timerId !== null) || (this.timerId !== undefined))
+      clearTimeout(this.timerId);
+    if(this.state === 1) this.state = 2;
+    else this.state = 0;
+  };
+}
+//]]>
+</script>
+
+<dl>
+<dt>
 <svg id="tileNormal" width="20" height="20">
   <rect width="20" height="20"
     style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
   <polyline points="18,0 18,18 0,18"
     style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
 </svg>
+</dt>
+<dd>This tile will be opend by click, or mark flag by long-click.</dd>
+<br />
+<dt>
 <svg id="tileFlag" width="20" height="20">
   <rect width="20" height="20"
     style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
@@ -45,16 +83,38 @@ function longclicktest(obj) {
   <rect x="3" y="2" width="2" height="13"
     style="fill:rgb(153,102,0);stroke:none;" />
 </svg>
+</dt>
+<dd>This tile is marked by flag. To un-mark, long-click it. </dd>
+<br />
+<dt>
 <svg id="tileOpen" width="20" height="20">
   <rect width="20" height="20"
     style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
   <polyline points="18,0 0,0 0,18"
     style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
 </svg>
-<!--
+<span style="display: none">
   <text x="5" y="16"
     style="fill:black;stroke:black;stroke-width:1;">1</text>
--->
+  <text x="5" y="16"
+    style="fill:black;stroke:black;stroke-width:1;">2</text>
+  <text x="5" y="16"
+    style="fill:black;stroke:black;stroke-width:1;">3</text>
+  <text x="5" y="16"
+    style="fill:black;stroke:black;stroke-width:1;">4</text>
+  <text x="5" y="16"
+    style="fill:black;stroke:black;stroke-width:1;">5</text>
+  <text x="5" y="16"
+    style="fill:black;stroke:black;stroke-width:1;">6</text>
+  <text x="5" y="16"
+    style="fill:black;stroke:black;stroke-width:1;">7</text>
+  <text x="5" y="16"
+    style="fill:darkorange;stroke:darkorange;stroke-width:1;">8</text>
+</span>
+</dt>
+<dd>This tile is opend. If it has number, the number of mines are around. </dd>
+<br />
+<dt>
 <svg id="tileMine" width="20" height="20">
   <rect width="20" height="20"
     style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
@@ -67,6 +127,9 @@ function longclicktest(obj) {
   <line x1="8" y1="15" x2="14" y2="15"
     style="fill:none;stroke:red;stroke-wdith:2;" />
 </svg>
+</dt>
+<dd>This is mine tile. If you opened tile and appear this tile, game is over and you lose. </dd>
+</dl>
 
 </body>
 </html>
