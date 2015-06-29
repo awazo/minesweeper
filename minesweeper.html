@@ -6,24 +6,55 @@
 * { padding: 0px; margin: 0px; }
 dt, dd { display: inline; }
 dt:after { content: ":"; }
+#main {
+  width: 80%;
+  border: solid 3px blue;
+}
+#message {
+  margin-left: 20px;
+  margin-top: 10px;
+  padding: 0px 10px;
+  width: 30%;
+  background-color: rgb(180, 200, 130);
+}
+#gameBoard {
+  margin: 10px;
+  margin-top: 5px;
+}
+#howToUse {
+  margin: 15px 5px;
+  padding: 5px;
+  width: 50%;
+  border: solid 1px black;
+  background-color: rgb(200, 200, 200);
+}
+.title {
+  border-bottom: solid 1px black;
+}
+#tileExamples {
+  margin: 15px;
+  margin-left: 30px;
+}
 </style>
 <title>minesweeper</title>
 </head>
 <body>
-<div id="message">
-under constructions...
-<br />
-to mark as FLAG (it'll not be open by click), long-click a tile.<br />
+Next Implementation Plan: can to change a size of the game board. 
+
+<div id="howToUse">
+<span class="title">HOW TO USE: </span><br />
+to mark as FLAG (it'll not be opened by click), long-click a tile.<br />
 long-click is mouse-down then wait a second.<br />
 if un-mark FLAG, long-click again.
 </div>
 
-<table id="gameBoard">
-<!--
-<tbody id="gameBoardBody">
-</tbody>
--->
-</table>
+<div id="main">
+
+<div id="message"></div>
+
+<table id="gameBoard"></table>
+
+</div>
 
 <script>
 //<![CDATA[
@@ -53,6 +84,7 @@ function forEachTd(tbodyObj, funcApplyToTd) {
 //<![CDATA[
 var ROW_INDEX_ATTR_NAME = "dataRowindex";
 var COL_INDEX_ATTR_NAME = "dataColindex";
+var TD_MINES_ATTR_NAME = "dataMines";
 
 function createTbody(row, col) {
   var tbodyObj = document.createElement("TBODY");
@@ -70,8 +102,36 @@ function createTbody(row, col) {
   return tbodyObj;
 }
 function getTdIndex(tdObj) {
-  return [tdObj.parentNode.getAttribute(ROW_INDEX_ATTR_NAME),
-    tdObj.getAttribute(COL_INDEX_ATTR_NAME)];
+  return [Number(tdObj.parentNode.getAttribute(ROW_INDEX_ATTR_NAME)),
+    Number(tdObj.getAttribute(COL_INDEX_ATTR_NAME))];
+}
+function getParentTbody(tdObj) {
+  var tbodyObj = tdObj;
+  while(tbodyObj.nodeName !== "TBODY") tbodyObj = tbodyObj.parentNode;
+  return tbodyObj;
+}
+function getAroundTd(tdObj) {
+  var aroundTds = [];
+  var tdIndex = getTdIndex(tdObj);
+  var tbodyObj = getParentTbody(tdObj);
+  for(var i = tdIndex[0] - 1; i <= tdIndex[0] + 1; i++) {
+    if(i < 0) continue;
+    for(var j = tdIndex[1] - 1; j <= tdIndex[1] + 1; j++) {
+      if(j < 0) continue;
+      if((i === tdIndex[0]) && (j === tdIndex[1])) continue;
+      var around = getTd(tbodyObj, i, j);
+      if(around !== null) aroundTds.push(around);
+    }
+  }
+  return aroundTds;
+}
+function countAroundMine(tdObj) {
+  var aroundTds = getAroundTd(tdObj);
+  var count = 0;
+  for(var i in aroundTds)
+    if(Number(aroundTds[i].getAttribute(TD_MINES_ATTR_NAME)) === 9)
+      count++;
+  return count;
 }
 
 var GAME_BOARD_BODY_ID = "gameBoardBody";
@@ -79,12 +139,51 @@ var GAME_BOARD_BODY_ID = "gameBoardBody";
 function getInitializedGameBoard(row, col, mines) {
   var tbodyObj = createTbody(row, col);
   tbodyObj.id = GAME_BOARD_BODY_ID;
+  var mineCount = 0;
   forEachTd(tbodyObj, function(tdObj, r, c) {
       var tile = getTileCopy("tileNormal");
       tdObj.appendChild(tile);
-      //TODO: implement
+      tdObj.setAttribute(TD_MINES_ATTR_NAME, 0);
+      //TODO: implement set mine (TD_MINES_ATTR_NAME = 9)
+      /* temporary implement */
+        if(Math.random() > 0.78) {
+          tdObj.setAttribute(TD_MINES_ATTR_NAME, 9);
+          mineCount++;
+        }
+    });
+  document.getElementById("message").innerHTML = "mines are: " + mineCount;
+  forEachTd(tbodyObj, function(tdObj, r, c) {
+      if(Number(tdObj.getAttribute(TD_MINES_ATTR_NAME)) !== 9)
+        tdObj.setAttribute(TD_MINES_ATTR_NAME, countAroundMine(tdObj));
     });
   return tbodyObj;
+}
+function doGameOver(tdObj) {
+  var tbodyObj = getParentTbody(tdObj);
+  forEachTd(tbodyObj, function(tdObj, r, c) {
+      if(Number(tdObj.getAttribute(TD_MINES_ATTR_NAME)) === 9)
+        tileToMine(tdObj);
+    });
+  document.getElementById("message").innerHTML = "GAME OVER";
+}
+function isGameClear(tdObj) {
+  var tbodyObj = getParentTbody(tdObj);
+  var result = true;
+  forEachTd(tbodyObj, function(tdObj, r, c) {
+      if(isNormalTile(tdObj) &&
+        (Number(tdObj.getAttribute(TD_MINES_ATTR_NAME)) !== 9)) {
+        result = false;
+        return;
+      }
+    });
+  return result;
+}
+function doGameClear(tdObj) {
+  var tbodyObj = getParentTbody(tdObj);
+  forEachTd(tbodyObj, function(tdObj, r, c) {
+      if(isNormalTile(tdObj)) tileToFlag(tdObj);
+    });
+  document.getElementById("message").innerHTML = "Congratulations!!!";
 }
 //]]>
 </script>
@@ -121,6 +220,25 @@ function getTileCopy(tileId) {
   ret.id = "";
   return ret;
 }
+
+var TILE_NORMAL_CLASS = "normal";
+var TILE_FLAG_CLASS = "flag";
+var TILE_MINE_CLASS = "mine";
+function isTileType(tdObj, tileClass) {
+  var typeObjs = tdObj.getElementsByClassName(tileClass);
+  return ((typeObjs !== undefined) && (typeObjs !== null) &&
+    (typeObjs.length > 0));
+}
+function isNormalTile(tdObj) {
+  return isTileType(tdObj, TILE_NORMAL_CLASS);
+}
+function isFlagTile(tdObj) {
+  return isTileType(tdObj, TILE_FLAG_CLASS);
+}
+function isMineTile(tdObj) {
+  return isTileType(tdObj, TILE_MINE_CLASS);
+}
+
 function tileToFlag(tdObj) {
   tdObj.removeChild(tdObj.children[0]);
   tdObj.appendChild(getTileCopy("tileFlag"));
@@ -139,6 +257,15 @@ function tileToOpen(tdObj, tileType) {
   var tile = getTileCopy(tileId);
   if(tile === null) tile = getTileCopy("tileMine");
   tdObj.appendChild(tile);
+  if(tileType === 0) {
+    var aroundTds = getAroundTd(tdObj);
+    for(var index in aroundTds) {
+      var around = aroundTds[index];
+      if(isNormalTile(around)) {
+        tileToOpen(around, Number(around.getAttribute(TD_MINES_ATTR_NAME)));
+      }
+    }
+  }
 }
 
 var tileLongClick;
@@ -157,8 +284,13 @@ function onNormalMouseUp(targetObj) {
   var tdObj = targetObj;
   while(tdObj.nodeName !== "TD") tdObj = tdObj.parentNode;
   if(tileLongClick.state === 1) {
-    tileToOpen(tdObj, tdObj.getAttribute("dataMines"));
     tileLongClick.clearTimeout();
+    var tileType = Number(tdObj.getAttribute(TD_MINES_ATTR_NAME));
+    if(tileType === 9) doGameOver(tdObj);
+    else {
+      tileToOpen(tdObj, tileType);
+      if(isGameClear(tdObj)) doGameClear(tdObj);
+    }
   }
 }
 function onFlagMouseDown(targetObj) {
@@ -171,16 +303,16 @@ function onFlagMouseDown(targetObj) {
   }, LONG_CLICK_TIMEOUT_MS);
 }
 function onFlagMouseUp(targetObj) {
-  var tdObj = targetObj;
-  while(tdObj.nodeName !== "TD") tdObj = tdObj.parentNode;
   if(tileLongClick.state === 1) tileLongClick.clearTimeout();
 }
 //]]>
 </script>
 
+<div id="tileExamples">
+Tile Examples:
 <dl>
 <dt>
-<svg id="tileNormal" width="20" height="20"
+<svg id="tileNormal" class="normal" width="20" height="20"
   onmousedown="onNormalMouseDown(this)" onmouseup="onNormalMouseUp(this)">
   <rect width="20" height="20"
     style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
@@ -191,7 +323,7 @@ function onFlagMouseUp(targetObj) {
 <dd>This tile will be opend by click, or mark flag by long-click.</dd>
 <br />
 <dt>
-<svg id="tileFlag" width="20" height="20"
+<svg id="tileFlag" class="flag" width="20" height="20"
   onmousedown="onFlagMouseDown(this)" onmouseup="onFlagMouseUp(this)">
   <rect width="20" height="20"
     style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
@@ -282,7 +414,7 @@ function onFlagMouseUp(targetObj) {
 <dd>This tile is opend. If it has number, the number of mines are around. </dd>
 <br />
 <dt>
-<svg id="tileMine" width="20" height="20">
+<svg id="tileMine" class="mine" width="20" height="20">
   <rect width="20" height="20"
     style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
   <polyline points="18,0 0,0 0,18"
@@ -297,23 +429,13 @@ function onFlagMouseUp(targetObj) {
 </dt>
 <dd>This is mine tile. If you opened tile and appear this tile, game is over and you lose. </dd>
 </dl>
+</div>
 
 <script>
 //<![CDATA[
 try{
 var boardBody = getInitializedGameBoard(5, 5, 0);
 document.getElementById("gameBoard").appendChild(boardBody);
-/*
-var boardBody = document.getElementById("gameBoardBody");
-var tr = document.createElement("TR");
-boardBody.appendChild(tr);
-var td = document.createElement("TD");
-tr.appendChild(td);
-var t = document.getElementById("tileNormal").cloneNode(true);
-t.id = "";
-td.appendChild(t);
-td.setAttribute("dataMines", "1");
-*/
 }catch(e){console.log(e);}
 //]]>
 </script>
