@@ -10,33 +10,14 @@ dt:after { content: ":"; }
 <title>minesweeper</title>
 </head>
 <body>
-<div id="message" onmousedown="lcstart(this)" onmouseup="lcend(this)">
+<div id="message">
 under constructions...
 </div>
 
 <table id="gameBoard">
-<tbody>
+<tbody id="gameBoardBody">
 </tbody>
 </table>
-
-<script>
-//<![CDATA[
-var longclicktimerid;
-function longclicktest(obj) {
-  longclicktimerid = setTimeout(function() {
-      obj.innerHTML = "hoge";
-    }, 1000);
-}
-var lcobj;
-function lcstart(obj) {
-  lcobj = new StatedTimeout();
-  lcobj.setTimeout(function() { obj.innerHTML = "long-clicked"; }, 1000);
-}
-function lcend(obj) {
-  if(lcobj.state === 1) { obj.innerHTML = "clicked"; lcobj.clearTimeout(); }
-}
-//]]>
-</script>
 
 <script>
 //<![CDATA[
@@ -61,9 +42,76 @@ function StatedTimeout() {
 //]]>
 </script>
 
+<script>
+//<![CDATA[
+function getTileCopy(tileId) {
+  var target = document.getElementById(tileId);
+  if(target === null) return null;
+  var ret = target.cloneNode(true);
+  ret.id = "";
+  return ret;
+}
+function tileToFlag(tdObj) {
+  tdObj.removeChild(tdObj.children[0]);
+  tdObj.appendChild(getTileCopy("tileFlag"));
+}
+function tileToNormal(tdObj) {
+  tdObj.removeChild(tdObj.children[0]);
+  tdObj.appendChild(getTileCopy("tileNormal"));
+}
+function tileToMine(tdObj) {
+  tdObj.removeChild(tdObj.children[0]);
+  tdObj.appendChild(getTileCopy("tileMine"));
+}
+function tileToOpen(tdObj, tileType) {
+  tdObj.removeChild(tdObj.children[0]);
+  var tileId = "tileOpen".concat(tileType);
+  var tile = getTileCopy(tileId);
+  if(tile === null) tile = getTileCopy("tileMine");
+  tdObj.appendChild(tile);
+}
+
+var tileLongClick;
+var LONG_CLICK_TIMEOUT_MS = 1000;
+
+function onNormalMouseDown(targetObj) {
+  var tdObj = targetObj;
+  while(tdObj.nodeName !== "TD") tdObj = tdObj.parentNode;
+  if((tileLongClick === undefined) || (tileLongClick === null))
+    tileLongClick = new StatedTimeout();
+  tileLongClick.setTimeout(function() {
+    tileToFlag(tdObj);
+  }, LONG_CLICK_TIMEOUT_MS);
+}
+function onNormalMouseUp(targetObj) {
+  var tdObj = targetObj;
+  while(tdObj.nodeName !== "TD") tdObj = tdObj.parentNode;
+  if(tileLongClick.state === 1) {
+    tileToOpen(tdObj, tdObj.getAttribute("dataMines"));
+    tileLongClick.clearTimeout();
+  }
+}
+function onFlagMouseDown(targetObj) {
+  var tdObj = targetObj;
+  while(tdObj.nodeName !== "TD") tdObj = tdObj.parentNode;
+  if((tileLongClick === undefined) || (tileLongClick === null))
+    tileLongClick = new StatedTimeout();
+  tileLongClick.setTimeout(function() {
+    tileToNormal(tdObj);
+  }, LONG_CLICK_TIMEOUT_MS);
+}
+function onFlagMouseUp(targetObj) {
+  var tdObj = targetObj;
+  while(tdObj.nodeName !== "TD") tdObj = tdObj.parentNode;
+  if(tileLongClick.state === 1) tileLongClick.clearTimeout();
+}
+//]]>
+</script>
+
 <dl>
 <dt>
-<svg id="tileNormal" width="20" height="20">
+<svg id="tileNormal" width="20" height="20"
+  onmousedown="onNormalMouseDown(this)" onmouseup="onNormalMouseUp(this)">
   <rect width="20" height="20"
     style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
   <polyline points="18,0 18,18 0,18"
@@ -73,7 +121,8 @@ function StatedTimeout() {
 <dd>This tile will be opend by click, or mark flag by long-click.</dd>
 <br />
 <dt>
-<svg id="tileFlag" width="20" height="20">
+<svg id="tileFlag" width="20" height="20"
+  onmousedown="onFlagMouseDown(this)" onmouseup="onFlagMouseUp(this)">
   <rect width="20" height="20"
     style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
   <polyline points="18,0 18,18 0,18"
@@ -87,29 +136,77 @@ function StatedTimeout() {
 <dd>This tile is marked by flag. To un-mark, long-click it. </dd>
 <br />
 <dt>
-<svg id="tileOpen" width="20" height="20">
+<svg id="tileOpen0" width="20" height="20">
   <rect width="20" height="20"
     style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
   <polyline points="18,0 0,0 0,18"
     style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
 </svg>
 <span style="display: none">
+<svg id="tileOpen1" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 0,0 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
     style="fill:black;stroke:black;stroke-width:1;">1</text>
+</svg>
+<svg id="tileOpen2" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 0,0 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
     style="fill:black;stroke:black;stroke-width:1;">2</text>
+</svg>
+<svg id="tileOpen3" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 0,0 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
     style="fill:black;stroke:black;stroke-width:1;">3</text>
+</svg>
+<svg id="tileOpen4" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 0,0 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
     style="fill:black;stroke:black;stroke-width:1;">4</text>
+</svg>
+<svg id="tileOpen5" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 0,0 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
     style="fill:black;stroke:black;stroke-width:1;">5</text>
+</svg>
+<svg id="tileOpen6" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 0,0 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
     style="fill:black;stroke:black;stroke-width:1;">6</text>
+</svg>
+<svg id="tileOpen7" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 0,0 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
     style="fill:black;stroke:black;stroke-width:1;">7</text>
+</svg>
+<svg id="tileOpen8" width="20" height="20">
+  <rect width="20" height="20"
+    style="fill:rgb(216,216,216);stroke:rgb(128,128,128);stroke-width:0;" />
+  <polyline points="18,0 0,0 0,18"
+    style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
     style="fill:darkorange;stroke:darkorange;stroke-width:1;">8</text>
+</svg>
 </span>
 </dt>
 <dd>This tile is opend. If it has number, the number of mines are around. </dd>
@@ -130,6 +227,20 @@ function StatedTimeout() {
 </dt>
 <dd>This is mine tile. If you opened tile and appear this tile, game is over and you lose. </dd>
 </dl>
+
+<script>
+//<![CDATA[
+var boardBody = document.getElementById("gameBoardBody");
+var tr = document.createElement("TR");
+boardBody.appendChild(tr);
+var td = document.createElement("TD");
+tr.appendChild(td);
+var t = document.getElementById("tileNormal").cloneNode(true);
+t.id = "";
+td.appendChild(t);
+td.setAttribute("dataMines", "1");
+//]]>
+</script>
 
 </body>
 </html>
