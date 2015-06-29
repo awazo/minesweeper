@@ -12,12 +12,82 @@ dt:after { content: ":"; }
 <body>
 <div id="message">
 under constructions...
+<br />
+to mark as FLAG (it'll not be open by click), long-click a tile.<br />
+long-click is mouse-down then wait a second.<br />
+if un-mark FLAG, long-click again.
 </div>
 
 <table id="gameBoard">
+<!--
 <tbody id="gameBoardBody">
 </tbody>
+-->
 </table>
+
+<script>
+//<![CDATA[
+function getTd(tbodyObj, row, col) {
+  if((tbodyObj === undefined) || (tbodyObj === null)) return null;
+  var trList = tbodyObj.getElementsByTagName("TR");
+  if((trList === null) || (trList.length <= row)) return null;
+  var tdList = trList[row].getElementsByTagName("TD");
+  if((tdList === null) || (tdList.length <= col)) return null;
+  return tdList[col];
+}
+function getTbodySize(tbodyObj) {
+  var trList = tbodyObj.getElementsByTagName("TR");
+  var tdList = trList[0].getElementsByTagName("TD");
+  return [trList.length, tdList.length];
+}
+function forEachTd(tbodyObj, funcApplyToTd) {
+  var tbodySize = getTbodySize(tbodyObj);
+  for(var i = 0; i < tbodySize[0]; i++)
+    for(var j = 0; j < tbodySize[1]; j++)
+      funcApplyToTd(getTd(tbodyObj, i, j), i, j);
+}
+//]]>
+</script>
+
+<script>
+//<![CDATA[
+var ROW_INDEX_ATTR_NAME = "dataRowindex";
+var COL_INDEX_ATTR_NAME = "dataColindex";
+
+function createTbody(row, col) {
+  var tbodyObj = document.createElement("TBODY");
+  if(row <= 0) return tbodyObj;
+  for(var i = 0; i < row; i++) {
+    var trObj = document.createElement("TR");
+    trObj.setAttribute(ROW_INDEX_ATTR_NAME, i);
+    for(var j = 0; j < col; j++) {
+      var tdObj = document.createElement("TD");
+      tdObj.setAttribute(COL_INDEX_ATTR_NAME, j);
+      trObj.appendChild(tdObj);
+    }
+    tbodyObj.appendChild(trObj);
+  }
+  return tbodyObj;
+}
+function getTdIndex(tdObj) {
+  return [tdObj.parentNode.getAttribute(ROW_INDEX_ATTR_NAME),
+    tdObj.getAttribute(COL_INDEX_ATTR_NAME)];
+}
+
+var GAME_BOARD_BODY_ID = "gameBoardBody";
+
+function getInitializedGameBoard(row, col, mines) {
+  var tbodyObj = createTbody(row, col);
+  tbodyObj.id = GAME_BOARD_BODY_ID;
+  forEachTd(tbodyObj, function(tdObj, r, c) {
+      var tile = getTileCopy("tileNormal");
+      tdObj.appendChild(tile);
+      //TODO: implement
+    });
+  return tbodyObj;
+}
+//]]>
+</script>
 
 <script>
 //<![CDATA[
@@ -230,6 +300,10 @@ function onFlagMouseUp(targetObj) {
 
 <script>
 //<![CDATA[
+try{
+var boardBody = getInitializedGameBoard(5, 5, 0);
+document.getElementById("gameBoard").appendChild(boardBody);
+/*
 var boardBody = document.getElementById("gameBoardBody");
 var tr = document.createElement("TR");
 boardBody.appendChild(tr);
@@ -239,6 +313,8 @@ var t = document.getElementById("tileNormal").cloneNode(true);
 t.id = "";
 td.appendChild(t);
 td.setAttribute("dataMines", "1");
+*/
+}catch(e){console.log(e);}
 //]]>
 </script>
 
