@@ -8,9 +8,34 @@ dt, dd { display: inline; }
 dt:after { content: ":"; }
 #main {
   width: 80%;
-  border: solid 3px blue;
+  border: 3px solid blue;
+  margin: 20px;
+}
+#controls ul {
+  list-style-type: none;
+  overflow: hidden;
+  margin-left: 5px;
+}
+#controls ul li {
+  float: left;
+  margin: 5px 0px;
+  border: 3px solid navy;
+  border-radius: 10px;
+  background-color: deepskyblue;
+  text-align: center;
+  box-shadow: 5px 5px 5px lightsteelblue;
+}
+#controls ul li:hover {
+  background-color: dodgerblue;
+}
+#controls ul li span, #controls ul li a {
+  display: block;
+  padding: 3px 5px;
+  width: 120px;
+  text-decoration: none;
 }
 #message {
+  clear: both;
   margin-left: 20px;
   margin-top: 10px;
   padding: 0px 10px;
@@ -22,14 +47,14 @@ dt:after { content: ":"; }
   margin-top: 5px;
 }
 #howToUse {
-  margin: 15px 5px;
+  margin: 15px 15px;
   padding: 5px;
   width: 50%;
-  border: solid 1px black;
+  border: 1px solid black;
   background-color: rgb(200, 200, 200);
 }
 .title {
-  border-bottom: solid 1px black;
+  border-bottom: 1px solid black;
 }
 #tileExamples {
   margin: 15px;
@@ -50,11 +75,36 @@ if un-mark FLAG, long-click again.
 
 <div id="main">
 
+<div id="controls">
+<ul>
+<li onclick="onClickNewgame()"><span>NEW GAME</span></li>
+<li>
+  <a href="http://github.com/awazo/minesweeper" target="blank">repository</a>
+</li>
+</ul>
+</div>
+
 <div id="message"></div>
 
 <table id="gameBoard"></table>
 
 </div>
+
+<script>
+//<![CDATA[
+var gameState = 0;
+// 0: playing, 1: gameover, 2: gameclear
+
+function onClickNewgame() {
+  var boardBody = getInitializedGameBoard(10, 10, 0);
+  var board = document.getElementById("gameBoard");
+  if(board.children.length > 0)
+    board.removeChild(board.children[0]);
+  board.appendChild(boardBody);
+  gameState = 0;
+}
+//]]>
+</script>
 
 <script>
 //<![CDATA[
@@ -160,6 +210,7 @@ function getInitializedGameBoard(row, col, mines) {
   return tbodyObj;
 }
 function doGameOver(tdObj) {
+  gameState = 1;
   var tbodyObj = getParentTbody(tdObj);
   forEachTd(tbodyObj, function(tdObj, r, c) {
       if(Number(tdObj.getAttribute(TD_MINES_ATTR_NAME)) === 9)
@@ -180,6 +231,7 @@ function isGameClear(tdObj) {
   return result;
 }
 function doGameClear(tdObj) {
+  gameState = 2;
   var tbodyObj = getParentTbody(tdObj);
   forEachTd(tbodyObj, function(tdObj, r, c) {
       if(isNormalTile(tdObj)) tileToFlag(tdObj);
@@ -273,6 +325,7 @@ var tileLongClick;
 var LONG_CLICK_TIMEOUT_MS = 1000;
 
 function onNormalMouseDown(targetObj) {
+  if(gameState !== 0) return;
   var tdObj = targetObj;
   while(tdObj.nodeName !== "TD") tdObj = tdObj.parentNode;
   if((tileLongClick === undefined) || (tileLongClick === null))
@@ -282,6 +335,7 @@ function onNormalMouseDown(targetObj) {
   }, LONG_CLICK_TIMEOUT_MS);
 }
 function onNormalMouseUp(targetObj) {
+  if(gameState !== 0) return;
   var tdObj = targetObj;
   while(tdObj.nodeName !== "TD") tdObj = tdObj.parentNode;
   if(tileLongClick.state === 1) {
@@ -295,6 +349,7 @@ function onNormalMouseUp(targetObj) {
   }
 }
 function onFlagMouseDown(targetObj) {
+  if(gameState !== 0) return;
   var tdObj = targetObj;
   while(tdObj.nodeName !== "TD") tdObj = tdObj.parentNode;
   if((tileLongClick === undefined) || (tileLongClick === null))
@@ -304,6 +359,7 @@ function onFlagMouseDown(targetObj) {
   }, LONG_CLICK_TIMEOUT_MS);
 }
 function onFlagMouseUp(targetObj) {
+  if(gameState !== 0) return;
   if(tileLongClick.state === 1) tileLongClick.clearTimeout();
 }
 //]]>
@@ -434,10 +490,7 @@ Tile Examples:
 
 <script>
 //<![CDATA[
-try{
-var boardBody = getInitializedGameBoard(10, 10, 0);
-document.getElementById("gameBoard").appendChild(boardBody);
-}catch(e){console.log(e);}
+onClickNewgame();
 //]]>
 </script>
 
