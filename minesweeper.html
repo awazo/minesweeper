@@ -150,6 +150,7 @@ function getInitializedGameBoard(row, col, mines) {
           tdObj.setAttribute(TD_MINES_ATTR_NAME, 9);
           mineCount++;
         }
+      /* temporary implement end */
     });
   document.getElementById("message").innerHTML = "mines are: " + mineCount;
   forEachTd(tbodyObj, function(tdObj, r, c) {
@@ -359,7 +360,7 @@ Tile Examples:
   <polyline points="18,0 0,0 0,18"
     style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
-    style="fill:black;stroke:black;stroke-width:1;">2</text>
+    style="fill:darkkhaki;stroke:darkkhaki;stroke-width:1;">2</text>
 </svg>
 <svg id="tileOpen3" width="20" height="20">
   <rect width="20" height="20"
@@ -367,7 +368,7 @@ Tile Examples:
   <polyline points="18,0 0,0 0,18"
     style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
-    style="fill:black;stroke:black;stroke-width:1;">3</text>
+    style="fill:seagreen;stroke:seagreen;stroke-width:1;">3</text>
 </svg>
 <svg id="tileOpen4" width="20" height="20">
   <rect width="20" height="20"
@@ -375,7 +376,7 @@ Tile Examples:
   <polyline points="18,0 0,0 0,18"
     style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
-    style="fill:black;stroke:black;stroke-width:1;">4</text>
+    style="fill:darkcyan;stroke:darkcyan;stroke-width:1;">4</text>
 </svg>
 <svg id="tileOpen5" width="20" height="20">
   <rect width="20" height="20"
@@ -383,7 +384,7 @@ Tile Examples:
   <polyline points="18,0 0,0 0,18"
     style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
-    style="fill:black;stroke:black;stroke-width:1;">5</text>
+    style="fill:blueviolet;stroke:blueviolet;stroke-width:1;">5</text>
 </svg>
 <svg id="tileOpen6" width="20" height="20">
   <rect width="20" height="20"
@@ -391,7 +392,7 @@ Tile Examples:
   <polyline points="18,0 0,0 0,18"
     style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
-    style="fill:black;stroke:black;stroke-width:1;">6</text>
+    style="fill:violet;stroke:violet;stroke-width:1;">6</text>
 </svg>
 <svg id="tileOpen7" width="20" height="20">
   <rect width="20" height="20"
@@ -399,7 +400,7 @@ Tile Examples:
   <polyline points="18,0 0,0 0,18"
     style="fill:none;stroke:rgb(128,128,128);stroke-width:4" />
   <text x="5" y="16"
-    style="fill:black;stroke:black;stroke-width:1;">7</text>
+    style="fill:hotpink;stroke:hotpink;stroke-width:1;">7</text>
 </svg>
 <svg id="tileOpen8" width="20" height="20">
   <rect width="20" height="20"
@@ -434,7 +435,7 @@ Tile Examples:
 <script>
 //<![CDATA[
 try{
-var boardBody = getInitializedGameBoard(5, 5, 0);
+var boardBody = getInitializedGameBoard(10, 10, 0);
 document.getElementById("gameBoard").appendChild(boardBody);
 }catch(e){console.log(e);}
 //]]>
