@@ -18,7 +18,7 @@ dt:after { content: ":"; }
 }
 #controls ul li {
   float: left;
-  margin: 5px 0px;
+  margin: 5px 2px;
   border: 3px solid navy;
   border-radius: 10px;
   background-color: deepskyblue;
@@ -33,6 +33,13 @@ dt:after { content: ":"; }
   padding: 3px 5px;
   width: 120px;
   text-decoration: none;
+}
+#arguments {
+  margin: 0px 10px;
+  background-color: deepskyblue;
+}
+#arguments input {
+  width: 50px;
 }
 #message {
   clear: both;
@@ -64,7 +71,7 @@ dt:after { content: ":"; }
 <title>minesweeper</title>
 </head>
 <body>
-Next Implementation Plan: can to change a size of the game board. 
+Next Implementation Plan: can to change a rate of mines.
 
 <div id="howToUse">
 <span class="title">HOW TO USE: </span><br />
@@ -84,6 +91,39 @@ if un-mark FLAG, long-click again.
 </ul>
 </div>
 
+<div id="arguments">
+  <span>rows:
+    <input id="boardRows" type="number" value="10" min="1" required />
+  </span>
+  <span>cols:
+    <input id="boardCols" type="number" value="10" min="1" required />
+  </span>
+<!--
+  <span>mine rate:
+    <select name="mineRate">
+      <option value="10">10 %</option>
+      <option value="15">15 %</option>
+      <option value="20">20 %</option>
+      <option value="25" selected>25 %</option>
+      <option value="30">30 %</option>
+      <option value="35">35 %</option>
+      <option value="40">40 %</option>
+      <option value="45">45 %</option>
+      <option value="50">50 %</option>
+      <option value="55">55 %</option>
+      <option value="60">60 %</option>
+      <option value="65">65 %</option>
+      <option value="70">70 %</option>
+      <option value="75">75 %</option>
+      <option value="80">80 %</option>
+      <option value="85">85 %</option>
+      <option value="90">90 %</option>
+      <option value="95">95 %</option>
+    </select>
+  </span>
+-->
+</div>
+
 <div id="message"></div>
 
 <table id="gameBoard"></table>
@@ -95,13 +135,49 @@ if un-mark FLAG, long-click again.
 var gameState = 0;
 // 0: playing, 1: gameover, 2: gameclear
 
+function validateBoardSizeArgument() {
+  var rowObj = document.getElementById("boardRows");
+  var colObj = document.getElementById("boardCols");
+  var errMsg = "";
+  if(rowObj.checkValidity() === false) {
+    errMsg = rowObj.validationMessage;
+  }
+  if(colObj.checkValidity() === false) {
+    if(errMsg.length > 0) errMsg += ", ";
+    errMsg += colObj.validationMessage;
+  }
+  if(errMsg.length > 0) {
+    setMessage(errMsg);
+    return null;
+  } else {
+    var r = Number(rowObj.value);
+    var c = Number(colObj.value);
+    if((r === null) || (r === undefined) || isNaN(r)) {
+      errMsg = "rows must be number greater than 1";
+    }
+    if((c === null) || (c === undefined) || isNaN(c)) {
+      if(errMsg.length > 0) errMsg += ", ";
+      errMsg += ", cols must be number greater than 1";
+    }
+    if(errMsg.length > 0) {
+      setMessage(errMsg);
+      return null;
+    } else return {"row": r, "col": c};
+  }
+}
 function onClickNewgame() {
-  var boardBody = getInitializedGameBoard(10, 10, 0);
+  var size = validateBoardSizeArgument();
+  if((size === null) || (size === undefined)) return;
+  var boardBody = getInitializedGameBoard(size.row, size.col, 0);
   var board = document.getElementById("gameBoard");
   if(board.children.length > 0)
     board.removeChild(board.children[0]);
   board.appendChild(boardBody);
   gameState = 0;
+}
+
+function setMessage(msg) {
+  document.getElementById("message").innerHTML = msg;
 }
 //]]>
 </script>
@@ -202,7 +278,7 @@ function getInitializedGameBoard(row, col, mines) {
         }
       /* temporary implement end */
     });
-  document.getElementById("message").innerHTML = "mines are: " + mineCount;
+  setMessage("mines are: " + mineCount);
   forEachTd(tbodyObj, function(tdObj, r, c) {
       if(Number(tdObj.getAttribute(TD_MINES_ATTR_NAME)) !== 9)
         tdObj.setAttribute(TD_MINES_ATTR_NAME, countAroundMine(tdObj));
@@ -216,7 +292,7 @@ function doGameOver(tdObj) {
       if(Number(tdObj.getAttribute(TD_MINES_ATTR_NAME)) === 9)
         tileToMine(tdObj);
     });
-  document.getElementById("message").innerHTML = "GAME OVER";
+  setMessage("GAME OVER");
 }
 function isGameClear(tdObj) {
   var tbodyObj = getParentTbody(tdObj);
@@ -236,7 +312,7 @@ function doGameClear(tdObj) {
   forEachTd(tbodyObj, function(tdObj, r, c) {
       if(isNormalTile(tdObj)) tileToFlag(tdObj);
     });
-  document.getElementById("message").innerHTML = "Congratulations!!!";
+  setMessage("Congratulations!!!");
 }
 //]]>
 </script>
