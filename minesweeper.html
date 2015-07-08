@@ -41,6 +41,20 @@ dt:after { content: ":"; }
 #arguments input {
   width: 50px;
 }
+#scores span {
+  margin: 0px 5px;
+}
+#scores dl {
+  margin: 5px 20px;
+}
+#scores dt {
+  padding: 0px 5px;
+  background-color: rgb(180, 200, 160);
+}
+#scores dd {
+  padding: 0px 5px;
+  border: 1px solid black;
+}
 #message {
   clear: both;
   margin-left: 20px;
@@ -124,6 +138,14 @@ if un-mark FLAG, long-click again.
 -->
 </div>
 
+<div id="scores">
+  <dl>
+    <dt>mines</dt><dd id="scoreMinesValue">0</dd><span>-</span>
+    <dt>flags</dt><dd id="scoreFlagsValue">0</dd><span>=</span>
+    <dt>rest</dt><dd id="scoreRestValue">0</dd>
+  </dl>
+</div>
+
 <div id="message"></div>
 
 <table id="gameBoard"></table>
@@ -176,8 +198,52 @@ function onClickNewgame() {
   gameState = 0;
 }
 
-function setMessage(msg) {
-  document.getElementById("message").innerHTML = msg;
+function setInnerHtml(domId, innerHtml) {
+  document.getElementById(domId).innerHTML = innerHtml;
+}
+function setMessage(msg) { setInnerHtml("message", msg); }
+function getValueAsNumber(domId) {
+  var n = Number(document.getElementById(domId).innerHTML);
+  if((n === null) || (n === undefined) || isNaN(n)) return 0;
+  else return n;
+}
+function getScoreMines() { return getValueAsNumber("scoreMinesValue"); }
+function getScoreFlags() { return getValueAsNumber("scoreFlagsValue"); }
+function getScoreRest() { return getValueAsNumber("scoreRestValue"); }
+function setScoreMines(score) { setInnerHtml("scoreMinesValue", score); }
+function setScoreFlags(score) { setInnerHtml("scoreFlagsValue", score); }
+function setScoreRest(score) { setInnerHtml("scoreRestValue", score); }
+function incrementScoreMines(diff) {
+  var m = getScoreMines();
+  var f = getScoreFlags();
+  if((diff === undefined) || (diff === null)) diff = 1;
+  m += diff;
+  setScoreMines(m);
+  setScoreRest(m - f);
+}
+function decrementScoreMines(diff) {
+  var m = getScoreMines();
+  var f = getScoreFlags();
+  if((diff === undefined) || (diff === null)) diff = 1;
+  m -= diff;
+  setScoreMines(m);
+  setScoreRest(m - f);
+}
+function incrementScoreFlags(diff) {
+  var m = getScoreMines();
+  var f = getScoreFlags();
+  if((diff === undefined) || (diff === null)) diff = 1;
+  f += diff;
+  setScoreFlags(f);
+  setScoreRest(m - f);
+}
+function decrementScoreFlags(diff) {
+  var m = getScoreMines();
+  var f = getScoreFlags();
+  if((diff === undefined) || (diff === null)) diff = 1;
+  f -= diff;
+  setScoreFlags(f);
+  setScoreRest(m - f);
 }
 //]]>
 </script>
@@ -279,6 +345,9 @@ function getInitializedGameBoard(row, col, mines) {
       /* temporary implement end */
     });
   setMessage("mines are: " + mineCount);
+  setScoreMines(mineCount);
+  setScoreFlags(0);
+  setScoreRest(mineCount);
   forEachTd(tbodyObj, function(tdObj, r, c) {
       if(Number(tdObj.getAttribute(TD_MINES_ATTR_NAME)) !== 9)
         tdObj.setAttribute(TD_MINES_ATTR_NAME, countAroundMine(tdObj));
@@ -398,7 +467,7 @@ function tileToOpen(tdObj, tileType) {
 }
 
 var tileLongClick;
-var LONG_CLICK_TIMEOUT_MS = 1000;
+var LONG_CLICK_TIMEOUT_MS = 300;
 
 function onNormalMouseDown(targetObj) {
   if(gameState !== 0) return;
@@ -408,6 +477,7 @@ function onNormalMouseDown(targetObj) {
     tileLongClick = new StatedTimeout();
   tileLongClick.setTimeout(function() {
     tileToFlag(tdObj);
+    incrementScoreFlags();
   }, LONG_CLICK_TIMEOUT_MS);
 }
 function onNormalMouseUp(targetObj) {
@@ -432,6 +502,7 @@ function onFlagMouseDown(targetObj) {
     tileLongClick = new StatedTimeout();
   tileLongClick.setTimeout(function() {
     tileToNormal(tdObj);
+    decrementScoreFlags();
   }, LONG_CLICK_TIMEOUT_MS);
 }
 function onFlagMouseUp(targetObj) {
