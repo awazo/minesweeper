@@ -41,19 +41,38 @@ dt:after { content: ":"; }
 #arguments input {
   width: 50px;
 }
-#scores span {
+.scores span {
   margin: 0px 5px;
 }
-#scores dl {
+.scores dl {
   margin: 5px 20px;
 }
-#scores dt {
+.scores dt {
   padding: 0px 5px;
   background-color: rgb(180, 200, 160);
 }
-#scores dd {
+.scores dd {
   padding: 0px 5px;
   border: 1px solid black;
+}
+div.stat {
+  margin: 5px 10px;
+}
+#statistics {
+  border: 1px solid black;
+}
+div.button {
+  padding: 0px 2px;
+  width: 120px;
+  border: 1px solid navy;
+  border-radius: 10px;
+  background-color: deepskyblue;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 5px 5px 5px lightsteelblue;
+}
+div.button:hover {
+  background-color: dodgerblue;
 }
 #message {
   clear: both;
@@ -115,6 +134,7 @@ if un-mark FLAG, long-click again.
 <!--
   <span>mine rate:
     <select name="mineRate">
+      <option value="5">5 %</option>
       <option value="10">10 %</option>
       <option value="15">15 %</option>
       <option value="20">20 %</option>
@@ -138,12 +158,28 @@ if un-mark FLAG, long-click again.
 -->
 </div>
 
-<div id="scores">
-  <dl>
-    <dt>mines</dt><dd id="scoreMinesValue">0</dd><span>-</span>
-    <dt>flags</dt><dd id="scoreFlagsValue">0</dd><span>=</span>
-    <dt>rest</dt><dd id="scoreRestValue">0</dd>
-  </dl>
+<div id="statisticsOpenButton" class="button stat"
+    onclick="onClickStatOpen()">
+  open statistics
+</div>
+<div id="statistics" class="stat" style="display:none">
+  <div class="scores">
+    <dl>
+      <dt>mines</dt><dd id="scoreMinesValue">0</dd><span>-</span>
+      <dt>flags</dt><dd id="scoreFlagsValue">0</dd><span>=</span>
+      <dt>rest</dt><dd id="scoreRestValue">0</dd>
+    </dl>
+  </div>
+  <div class="scores">
+    <dl>
+      <span>(</span>
+      <dt>mines rest</dt><dd id="scoreMinesRestValue">0</dd><span>/</span>
+      <dt>tile unknown</dt><dd id="scoreTileunknownValue">0</dd>
+      <span>) * 100 =</span>
+      <dt>mine rate</dt><dd id="scoreMineRateValue">0</dd><span>%</span>
+    </dl>
+  </div>
+  <div class="button" onclick="onClickStatClose()">close statistics</div>
 </div>
 
 <div id="message"></div>
@@ -219,7 +255,9 @@ function incrementScoreMines(diff) {
   if((diff === undefined) || (diff === null)) diff = 1;
   m += diff;
   setScoreMines(m);
-  setScoreRest(m - f);
+  var rest = m - f;
+  setScoreRest(rest);
+  refreshMineRate(rest);
 }
 function decrementScoreMines(diff) {
   var m = getScoreMines();
@@ -227,7 +265,9 @@ function decrementScoreMines(diff) {
   if((diff === undefined) || (diff === null)) diff = 1;
   m -= diff;
   setScoreMines(m);
-  setScoreRest(m - f);
+  var rest = m - f;
+  setScoreRest(rest);
+  refreshMineRate(rest);
 }
 function incrementScoreFlags(diff) {
   var m = getScoreMines();
@@ -235,7 +275,9 @@ function incrementScoreFlags(diff) {
   if((diff === undefined) || (diff === null)) diff = 1;
   f += diff;
   setScoreFlags(f);
-  setScoreRest(m - f);
+  var rest = m - f;
+  setScoreRest(rest);
+  refreshMineRate(rest);
 }
 function decrementScoreFlags(diff) {
   var m = getScoreMines();
@@ -243,7 +285,50 @@ function decrementScoreFlags(diff) {
   if((diff === undefined) || (diff === null)) diff = 1;
   f -= diff;
   setScoreFlags(f);
-  setScoreRest(m - f);
+  var rest = m - f;
+  setScoreRest(rest);
+  refreshMineRate(rest);
+}
+function getScoreMinesRest() { return getValueAsNumber("scoreMinesRestValue"); }
+function getScoreTileUnknown() { return getValueAsNumber("scoreTileunknownValue"); }
+function getScoreMineRate() { return getValueAsNumber("scoreMineRateValue"); }
+function setScoreMinesRest(scr) { setInnerHtml("scoreMinesRestValue", scr); }
+function setScoreTileUnknown(scr) { setInnerHtml("scoreTileunknownValue", scr); }
+function setScoreMineRate(scr) { setInnerHtml("scoreMineRateValue", scr); }
+function incrementScoreTileUnknown(diff) {
+  var m = getScoreMinesRest();
+  var t = getScoreTileUnknown();
+  if((diff === undefined) || (diff === null)) diff = 1;
+  t += diff;
+  setScoreTileUnknown(t);
+  setScoreMineRate(calcMineRate(m, t));
+}
+function decrementScoreTileUnknown(diff) {
+  var m = getScoreMinesRest();
+  var t = getScoreTileUnknown();
+  if((diff === undefined) || (diff === null)) diff = 1;
+  t -= diff;
+  setScoreTileUnknown(t);
+  setScoreMineRate(calcMineRate(m, t));
+}
+function calcMineRate(minesRest, tileUnknown) {
+  if((minesRest === undefined) || (minesRest === null))
+    minesRest = getScoreMinesRest();
+  if((tileUnknown === undefined) || (tileUnknown === null))
+    tileUnknown = getScoreTileUnknown();
+  return Math.floor(((minesRest / tileUnknown) * 10000)) / 100;
+}
+function refreshMineRate(minesRest) {
+  setScoreMinesRest(minesRest);
+  setScoreMineRate(calcMineRate());
+}
+function onClickStatOpen() {
+  document.getElementById("statisticsOpenButton").style.display = "none";
+  document.getElementById("statistics").style.display = "block";
+}
+function onClickStatClose() {
+  document.getElementById("statistics").style.display = "none";
+  document.getElementById("statisticsOpenButton").style.display = "block";
 }
 //]]>
 </script>
@@ -348,6 +433,8 @@ function getInitializedGameBoard(row, col, mines) {
   setScoreMines(mineCount);
   setScoreFlags(0);
   setScoreRest(mineCount);
+  setScoreTileUnknown(row * col);
+  refreshMineRate(mineCount);
   forEachTd(tbodyObj, function(tdObj, r, c) {
       if(Number(tdObj.getAttribute(TD_MINES_ATTR_NAME)) !== 9)
         tdObj.setAttribute(TD_MINES_ATTR_NAME, countAroundMine(tdObj));
@@ -455,6 +542,7 @@ function tileToOpen(tdObj, tileType) {
   var tile = getTileCopy(tileId);
   if(tile === null) tile = getTileCopy("tileMine");
   tdObj.appendChild(tile);
+  decrementScoreTileUnknown();
   if(tileType === 0) {
     var aroundTds = getAroundTd(tdObj);
     for(var index in aroundTds) {
@@ -478,6 +566,7 @@ function onNormalMouseDown(targetObj) {
   tileLongClick.setTimeout(function() {
     tileToFlag(tdObj);
     incrementScoreFlags();
+    decrementScoreTileUnknown();
   }, LONG_CLICK_TIMEOUT_MS);
 }
 function onNormalMouseUp(targetObj) {
@@ -503,6 +592,7 @@ function onFlagMouseDown(targetObj) {
   tileLongClick.setTimeout(function() {
     tileToNormal(tdObj);
     decrementScoreFlags();
+    incrementScoreTileUnknown();
   }, LONG_CLICK_TIMEOUT_MS);
 }
 function onFlagMouseUp(targetObj) {
