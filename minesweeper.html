@@ -104,7 +104,6 @@ div.button:hover {
 <title>minesweeper</title>
 </head>
 <body>
-Next Implementation Plan: can to change a rate of mines.
 
 <div id="howToUse">
 <span class="title">HOW TO USE: </span><br />
@@ -131,9 +130,8 @@ if un-mark FLAG, long-click again.
   <span>cols:
     <input id="boardCols" type="number" value="10" min="1" required />
   </span>
-<!--
   <span>mine rate:
-    <select name="mineRate">
+    <select id="mineRate">
       <option value="5">5 %</option>
       <option value="10">10 %</option>
       <option value="15">15 %</option>
@@ -155,7 +153,6 @@ if un-mark FLAG, long-click again.
       <option value="95">95 %</option>
     </select>
   </span>
--->
 </div>
 
 <div id="statisticsOpenButton" class="button stat"
@@ -223,10 +220,15 @@ function validateBoardSizeArgument() {
     } else return {"row": r, "col": c};
   }
 }
+function getMineRateArgument() {
+  var mrobj = document.getElementById("mineRate");
+  return Number(mrobj.value);
+}
 function onClickNewgame() {
   var size = validateBoardSizeArgument();
   if((size === null) || (size === undefined)) return;
-  var boardBody = getInitializedGameBoard(size.row, size.col, 0);
+  var mineRate = getMineRateArgument();
+  var boardBody = getInitializedGameBoard(size.row, size.col, mineRate);
   var board = document.getElementById("gameBoard");
   if(board.children.length > 0)
     board.removeChild(board.children[0]);
@@ -413,21 +415,17 @@ function countAroundMine(tdObj) {
 
 var GAME_BOARD_BODY_ID = "gameBoardBody";
 
-function getInitializedGameBoard(row, col, mines) {
+function getInitializedGameBoard(row, col, mineRate) {
   var tbodyObj = createTbody(row, col);
   tbodyObj.id = GAME_BOARD_BODY_ID;
   var mineCount = 0;
   forEachTd(tbodyObj, function(tdObj, r, c) {
       var tile = getTileCopy("tileNormal");
       tdObj.appendChild(tile);
-      tdObj.setAttribute(TD_MINES_ATTR_NAME, 0);
-      //TODO: implement set mine (TD_MINES_ATTR_NAME = 9)
-      /* temporary implement */
-        if(Math.random() > 0.78) {
-          tdObj.setAttribute(TD_MINES_ATTR_NAME, 9);
-          mineCount++;
-        }
-      /* temporary implement end */
+      if(Math.random() > ((100 - mineRate) / 100)) {
+        tdObj.setAttribute(TD_MINES_ATTR_NAME, 9);
+        mineCount++;
+      } else tdObj.setAttribute(TD_MINES_ATTR_NAME, 0);
     });
   setMessage("mines are: " + mineCount);
   setScoreMines(mineCount);
